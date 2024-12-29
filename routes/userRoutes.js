@@ -23,4 +23,10 @@ router.delete(
   userController.deleteUser
 );
 
+router.patch(
+  "/users",
+  expressjwt({ secret: jwtSecret, algorithms: ["HS256"] }),
+  userController.updateUser
+);
+
 export default router;

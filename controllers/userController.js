@@ -92,6 +92,7 @@ async function onlyOneUser(req, res) {
   try {
     const userToken = req.auth.id;
     const user = await getUserBy(userToken);
+
     if (user === null) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -118,10 +119,39 @@ async function deleteUser(req, res) {
     return res.status(500).json({ message: error.message });
   }
 }
+async function updateUser(req, res) {
+  console.log("Auth-->", req.auth);
+  try {
+    const userId = req.auth.id;
+    const { email, password } = req.body;
+
+    const userUpdate = await User.findOne({
+      _id: userId,
+      deletedAt: { $eq: null },
+    });
+    console.log("update-->", userUpdate);
+    if (!userUpdate) {
+      return res.json("Did not enter any information");
+    }
+
+    userUpdate.email = email || userUpdate.email;
+    // userUpdate.password = password || userUpdate.password;
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      password = hashedPassword;
+    }
+
+    await userUpdate.save();
+    return res.status(201).json("The user has been successfully updated");
+  } catch (error) {
+    return res.status(500).json({ message: error.error });
+  }
+}
 
 export default {
   createUser,
   login,
   onlyOneUser,
   deleteUser,
+  updateUser,
 };
