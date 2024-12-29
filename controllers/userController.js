@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { getUserBy } from "../services/userServices.js";
 
 async function createUser(req, res) {
   try {
@@ -87,7 +88,40 @@ async function login(req, res) {
   }
 }
 
+async function onlyOneUser(req, res) {
+  try {
+    const userToken = req.auth.id;
+    const user = await getUserBy(userToken);
+    if (user === null) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ user: user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+async function deleteUser(req, res) {
+  try {
+    const userId = req.auth.id;
+    const user = await getUserBy(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.deletedAt = new Date();
+    console.log(user.deletedAt);
+    await user.save();
+    return res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: error.message });
+  }
+}
+
 export default {
   createUser,
   login,
+  onlyOneUser,
+  deleteUser,
 };

@@ -11,4 +11,16 @@ dotenv.config();
 
 router.post("/users", userValidator.create, userController.createUser);
 
+router.get(
+  "/users",
+  expressjwt({ secret: jwtSecret, algorithms: ["HS256"] }),
+  userController.onlyOneUser
+);
+
+router.delete(
+  "/users",
+  expressjwt({ secret: jwtSecret, algorithms: ["HS256"] }),
+  userController.deleteUser
+);
+
 export default router;
