@@ -4,10 +4,9 @@ import userController from "../controllers/userController.js";
 import userValidator from "../middlewares/userValidator.js";
 import { expressjwt } from "express-jwt";
 
-const router = express.Router();
-const jwtSecret = process.env.JWT_SECRET;
-
 dotenv.config();
+const router = express.Router();
+const jwtSecret = process.env.JWT_SECRET || "contraseniaSecreta!";
 
 router.post("/users", userValidator.create, userController.createUser);
 
