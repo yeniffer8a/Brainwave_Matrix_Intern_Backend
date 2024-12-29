@@ -30,7 +30,7 @@ router.get(
 router.patch(
   "/tasks/:id",
   expressjwt({ secret: jwtSecret, algorithms: ["HS256"] }),
-  //taskValidator.update,
+  taskValidator.update,
   taskController.updateTask
 );
 

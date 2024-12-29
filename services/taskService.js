@@ -38,9 +38,9 @@ export async function getUserBy(taskId) {
 
 export async function deleteUserBy() {
   try {
-    const task = await Task.find({ deletedAt: { $ne: null } });
+    const tasks = await Task.find({ deletedAt: { $ne: null } });
     console.log(task);
-    return task;
+    return tasks;
   } catch (error) {
     throw new Error("Error al obtener el usuario: ", error);
   }

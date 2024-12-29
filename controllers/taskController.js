@@ -14,7 +14,7 @@ async function createTask(req, res) {
     console.log("taskBody----->", task);
     return res.status(201).json({ message: "Task created", task: task });
   } catch (error) {
-    return res.status(500).json({ message: error.error });
+    return res.status(500).json({ message: error.message });
   }
 }
 
@@ -58,12 +58,11 @@ async function deleteOneTask(req, res) {
 
 async function getAllTaskDeleted(req, res) {
   try {
-    const task = await deleteUserBy();
-    if (task) {
-      res.status(200).json({ task: task });
-    } else {
+    const tasks = await deleteUserBy();
+    if (tasks.length === 0) {
       return res.json({ message: "No task created" });
     }
+    return res.status(200).json({ tasks: tasks });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }
@@ -87,13 +86,13 @@ async function updateTask(req, res) {
 
     taskUpdate.title = title || taskUpdate.title;
     taskUpdate.description = description || taskUpdate.description;
-    taskUpdate.completed = completed || taskUpdate.completed;
+    taskUpdate.completed = completed;
 
     await taskUpdate.save();
     console.log("TSK-->", taskUpdate);
-    return res.status(201).json("The task has been successfully updated");
+    return res.status(200).json("The task has been successfully updated");
   } catch (error) {
-    return res.status(500).json({ message: error.error });
+    return res.status(500).json({ message: error.message });
   }
 }
 

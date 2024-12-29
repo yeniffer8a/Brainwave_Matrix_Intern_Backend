@@ -11,9 +11,6 @@ async function createUser(req, res) {
 
     const userCreated = await User.findOne({ email: email.toLowerCase() });
 
-    // if (userCreated.deletedAt === null) {
-    //   return res.status(409).json({ message: "The user already exists" });
-    // }
     if (userCreated) {
       if (userCreated.deletedAt === null) {
         return res.status(409).json({ message: "The user already exists" });
