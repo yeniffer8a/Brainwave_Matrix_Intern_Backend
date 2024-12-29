@@ -2,39 +2,36 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { getUserBy } from "../services/userServices.js";
+//technical-test-production-e516.up.railway.app/api/users ----railway
+//technical-test-production-e516.up.railway.app/api/token ----railway
 
 async function createUser(req, res) {
   try {
     const { email, password } = req.body;
 
-    const userCreated = await User.findOne({
-      email: email,
-    });
+    const userCreated = await User.findOne({ email: email.toLowerCase() });
 
-    const userExists = await User.findOne({
-      email: email,
-      deletedAt: { $ne: null },
-    });
-
-    console.log("exists -->", userExists);
-    if (userExists) {
-      const newUser = await User.create({
-        email: email.toLowerCase(),
-        password,
-      });
-      return res.status(201).json({ message: "Usuario creado" });
+    // if (userCreated.deletedAt === null) {
+    //   return res.status(409).json({ message: "The user already exists" });
+    // }
+    if (userCreated) {
+      if (userCreated.deletedAt === null) {
+        return res.status(409).json({ message: "The user already exists" });
+      } else {
+        // Si el usuario fue eliminado, recrearlo
+        userCreated.deletedAt = null;
+        userCreated.password = password;
+        await userCreated.save();
+        return res.status(201).json({ message: "User created" });
+      }
     }
-
-    if (!userCreated) {
-      const newUser = await User.create({
-        email: email.toLowerCase(),
-        password,
-      });
-      return res.status(201).json({ message: "Usuario creado" });
-    }
-    res.json({ message: "El usuario ya existe" });
+    const newUser = await User.create({ email: email.toLowerCase(), password });
+    return res.status(201).json({ message: "User created" });
   } catch (error) {
-    return res.status(500).json({ message: error.error });
+    console.error("Error during createUser:", error.message);
+    return res
+      .status(500)
+      .json({ message: `User creation error: ${error.message}` });
   }
 }
 
@@ -45,24 +42,24 @@ async function login(req, res) {
     //       req.body.password,
     //       req.body.email.toLowerCase()
     //     );
-    if (req.body.email === null) {
-      return res.status(500).json({
-        message: "Debe ingresar un email",
+    if (!req.body.email) {
+      return res.status(400).json({
+        message: "You must be enter an email",
       });
     }
-    if (req.body.password === null) {
-      return res.status(500).json({
-        message: "Debe ingresar un password",
+    if (!req.body.password) {
+      return res.status(400).json({
+        message: "You must be enter a password",
       });
     }
     const user = await User.findOne({
       email: req.body.email.toLowerCase(),
       deletedAt: { $eq: null },
     });
-    console.log(user.password);
-    if (user === null) {
-      return res.status(500).json({
-        message: "El email es incorrecto o el usuario no está creado",
+    //console.log(user.password);
+    if (!user) {
+      return res.status(404).json({
+        message: "The email is incorrect or the user isn´t created",
       });
     }
     // if (user.password != req.body.email) {
@@ -82,9 +79,9 @@ async function login(req, res) {
       //console.log(token);
       return res.json({ token: token });
     }
-    res.status(500).json({ message: "Las contraseñas no coinciden" });
+    return res.status(401).json({ message: "Passwords do not match" });
   } catch (error) {
-    throw new Error(`Error al loguear el usuario: ${error.message}`);
+    return res.status(500).json({ message: error.message });
   }
 }
 
@@ -120,7 +117,7 @@ async function deleteUser(req, res) {
   }
 }
 async function updateUser(req, res) {
-  console.log("Auth-->", req.auth);
+  // console.log("Auth-->", req.auth);
   try {
     const userId = req.auth.id;
     const { email, password } = req.body;
@@ -129,22 +126,19 @@ async function updateUser(req, res) {
       _id: userId,
       deletedAt: { $eq: null },
     });
-    console.log("update-->", userUpdate);
+    // console.log("update-->", userUpdate);
     if (!userUpdate) {
-      return res.json("Did not enter any information");
+      return res.status(404).json({ message: "User not found" });
     }
 
     userUpdate.email = email || userUpdate.email;
-    // userUpdate.password = password || userUpdate.password;
-    if (password) {
-      const hashedPassword = await bcrypt.hash(password, 10);
-      password = hashedPassword;
-    }
+    userUpdate.password = password || userUpdate.password;
 
+    console.log("userUpdate-->", userUpdate);
     await userUpdate.save();
-    return res.status(201).json("The user has been successfully updated");
+    return res.status(200).json("The user has been successfully updated");
   } catch (error) {
-    return res.status(500).json({ message: error.error });
+    return res.status(500).json({ message: error.message });
   }
 }
 
