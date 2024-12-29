@@ -1,0 +1,196 @@
+openapi: 3.0.0
+info:
+  title: User API
+  description: API for managing users with functionalities like registration, login, update, delete, and getting user by ID.
+  version: 1.0.0
+paths:
+  /users:
+    post:
+      summary: Create a new user
+      description: Creates a new user with email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "password123*"
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User created"
+        '500':
+          description: Error creating user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error creating user"
+    get:
+      summary: Get user information
+      description: Retrieves information of a single user, authenticated via JWT.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                        example: "60d7b8f9f39f7c001cbf8a51"
+                      email:
+                        type: string
+                        example: "user@example.com"
+        '404':
+          description: User not found
+        '500':
+          description: Error getting user information
+    get:
+      summary: Get authenticated user's details
+      description: Retrieves the details of the authenticated user by extracting the user ID from the token.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    example: "60d7b8f9f39f7c001cbf8a51"
+                  email:
+                    type: string
+                    example: "user@example.com"
+        '404':
+          description: User not found
+        '500':
+          description: Error retrieving user details
+    patch:
+      summary: Update user
+      description: Allows an authenticated user to update their information (such as email or password).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "new-email@example.com"
+                password:
+                  type: string
+                  example: "new-password123*"
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "The user has been successfully updated"
+        '500':
+          description: Error updating user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Error updating user"
+    delete:
+      summary: Delete user
+      description: Allows an authenticated user to delete their account.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User deleted successfully"
+        '404':
+          description: User not found
+        '500':
+          description: Error deleting user
+  /users/token:
+    post:
+      summary: User login
+      description: Allows a user to log in by providing email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "user@example.com"
+                password:
+                  type: string
+                  example: "password123*"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "jwt_token_example"
+        '500':
+          description: Error during login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid email or user not found"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
