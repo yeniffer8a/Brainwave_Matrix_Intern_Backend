@@ -1,13 +1,21 @@
 openapi: 3.0.0
 info:
-  title: User API
-  description: API for managing users with functionalities like registration, login, update, delete, and getting user by ID.
+  title: Task Management API
+  description: API for managing users and tasks, including CRUD operations and authentication.
   version: 1.0.0
+servers:
+  - url: http://localhost:8000/api
+    description: Local development server
+  - url: https://technical-test-production-e516.up.railway.app/api
+    description: Production server
+
 paths:
-  /users:
+  /token:
     post:
-      summary: Create a new user
-      description: Creates a new user with email and password.
+      summary: Login user and return a JWT token
+      operationId: login
+      tags:
+        - Auth
       requestBody:
         required: true
         content:
@@ -17,39 +25,63 @@ paths:
               properties:
                 email:
                   type: string
-                  example: "user@example.com"
+                  example: user@example.com
                 password:
                   type: string
-                  example: "password123*"
+                  example: password123
       responses:
-        '201':
+        "200":
+          description: JWT token issued successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "jwt_token_here"
+        "400":
+          description: Missing email or password
+        "404":
+          description: User not found
+        "401":
+          description: Invalid password
+
+  /users:
+    post:
+      summary: Create a new user
+      operationId: createUser
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: password123
+      responses:
+        "201":
           description: User created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "User created"
-        '500':
-          description: Error creating user
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Error creating user"
+        "400":
+          description: Invalid input data
+        "409":
+          description: User already exists
+
     get:
-      summary: Get user information
-      description: Retrieves information of a single user, authenticated via JWT.
-      security:
-        - bearerAuth: []
+      summary: Get the logged-in user information
+      operationId: getUser
+      tags:
+        - User
       responses:
-        '200':
-          description: User found
+        "200":
+          description: User details retrieved successfully
           content:
             application/json:
               schema:
@@ -58,44 +90,20 @@ paths:
                   user:
                     type: object
                     properties:
-                      _id:
-                        type: string
-                        example: "60d7b8f9f39f7c001cbf8a51"
                       email:
                         type: string
-                        example: "user@example.com"
-        '404':
+                        example: user@example.com
+                      id:
+                        type: string
+                        example: "60d1234567890abcdef12345"
+        "404":
           description: User not found
-        '500':
-          description: Error getting user information
-    get:
-      summary: Get authenticated user's details
-      description: Retrieves the details of the authenticated user by extracting the user ID from the token.
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: User found
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  _id:
-                    type: string
-                    example: "60d7b8f9f39f7c001cbf8a51"
-                  email:
-                    type: string
-                    example: "user@example.com"
-        '404':
-          description: User not found
-        '500':
-          description: Error retrieving user details
+
     patch:
-      summary: Update user
-      description: Allows an authenticated user to update their information (such as email or password).
-      security:
-        - bearerAuth: []
+      summary: Update the logged-in user's details
+      operationId: updateUser
+      tags:
+        - User
       requestBody:
         required: true
         content:
@@ -105,55 +113,35 @@ paths:
               properties:
                 email:
                   type: string
-                  example: "new-email@example.com"
+                  example: newuser@example.com
                 password:
                   type: string
-                  example: "new-password123*"
+                  example: newpassword123
       responses:
-        '200':
+        "200":
           description: User updated successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "The user has been successfully updated"
-        '500':
-          description: Error updating user
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Error updating user"
-    delete:
-      summary: Delete user
-      description: Allows an authenticated user to delete their account.
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: User deleted successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "User deleted successfully"
-        '404':
+        "400":
+          description: Invalid input data
+        "404":
           description: User not found
-        '500':
-          description: Error deleting user
-  /users/token:
+
+    delete:
+      summary: Delete the logged-in user
+      operationId: deleteUser
+      tags:
+        - User
+      responses:
+        "200":
+          description: User deleted successfully
+        "404":
+          description: User not found
+
+  /tasks:
     post:
-      summary: User login
-      description: Allows a user to log in by providing email and password.
+      summary: Create a new task
+      operationId: createTask
+      tags:
+        - Task
       requestBody:
         required: true
         content:
@@ -161,36 +149,129 @@ paths:
             schema:
               type: object
               properties:
-                email:
+                title:
                   type: string
-                  example: "user@example.com"
-                password:
+                  example: "Task Title"
+                description:
                   type: string
-                  example: "password123*"
+                  example: "Task Description"
+                completed:
+                  type: boolean
+                  example: false
       responses:
-        '200':
-          description: Login successful
+        "201":
+          description: Task created successfully
+        "400":
+          description: Invalid input data
+
+    get:
+      summary: Get all tasks
+      operationId: listTasks
+      tags:
+        - Task
+      responses:
+        "200":
+          description: List of all tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    title:
+                      type: string
+                      example: "Task Title"
+                    description:
+                      type: string
+                      example: "Task Description"
+                    completed:
+                      type: boolean
+                      example: false
+
+  /tasks/{id}:
+    get:
+      summary: Get a specific task by ID
+      operationId: getOneTask
+      tags:
+        - Task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "60d1234567890abcdef12345"
+      responses:
+        "200":
+          description: Task details retrieved successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  token:
+                  title:
                     type: string
-                    example: "jwt_token_example"
-        '500':
-          description: Error during login
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
+                    example: "Task Title"
+                  description:
                     type: string
-                    example: "Invalid email or user not found"
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+                    example: "Task Description"
+                  completed:
+                    type: boolean
+                    example: false
+        "404":
+          description: Task not found
+
+    patch:
+      summary: Update a specific task by ID
+      operationId: updateTask
+      tags:
+        - Task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "60d1234567890abcdef12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Updated Task Title"
+                description:
+                  type: string
+                  example: "Updated Task Description"
+                completed:
+                  type: boolean
+                  example: true
+      responses:
+        "200":
+          description: Task updated successfully
+        "400":
+          description: Invalid input data
+        "404":
+          description: Task not found
+
+    delete:
+      summary: Delete a specific task by ID
+      operationId: deleteOneTask
+      tags:
+        - Task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "60d1234567890abcdef12345"
+      responses:
+        "200":
+          description: Task deleted successfully
+        "404":
+          description: Task not found
