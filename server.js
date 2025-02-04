@@ -9,7 +9,7 @@ import YAML from "yamljs";
 const swaggerDocument = YAML.load("./openapi.yaml");
 
 const app = express();
-const PORT = process.env.APP_PORT || "3001";
+const PORT = process.env.APP_PORT || process.env.ENVINROMENT;
 
 connectDB();
 
